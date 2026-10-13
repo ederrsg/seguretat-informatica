@@ -1,0 +1,409 @@
+
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test de seguretat informàtica</title>
+<style>
+:root {
+  font-family: system-ui, Arial, sans-serif;
+  color: #172033;
+  background: #f3f6fb;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+header {
+  background: #173b70;
+  color: white;
+  padding: 32px 18px;
+  text-align: center;
+}
+header h1 { margin: 0 0 8px; font-size: 28px; }
+header p { margin: 0; color: #e1eaff; }
+main { max-width: 850px; margin: 24px auto; padding: 0 14px; }
+.info, .question, #result {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 3px 12px #1720330b;
+}
+.info { border-left: 5px solid #3775c8; }
+.question h2 { font-size: 17px; margin: 0 0 14px; }
+.options { display: grid; gap: 9px; }
+.option {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #d8dfeb;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.option:hover { background: #f4f7fc; }
+.option input { margin-top: 5px; }
+.option.correct {
+  background: #e2f7e9;
+  border-color: #198754;
+}
+.option.wrong {
+  background: #ffebeb;
+  border-color: #d63343;
+}
+.feedback { margin: 12px 0 0; font-weight: 650; }
+.good { color: #137342; }
+.bad { color: #bd2737; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; margin: 22px 0; }
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 14px 18px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.primary { background: #205bb5; color: white; flex: 1; }
+.secondary { background: #e0e7f1; color: #172033; }
+button:hover { filter: brightness(.95); }
+#result { display: none; text-align: center; }
+#score { font-size: 48px; font-weight: 800; color: #205bb5; }
+#summary { line-height: 1.7; }
+footer { text-align: center; padding: 20px; color: #667085; font-size: 13px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>🔐 Test de seguretat informàtica</h1>
+  <p>Confidencialitat, autenticació, amenaces i protecció de dades</p>
+</header>
+
+<main>
+  <div class="info">
+    <strong>Instruccions</strong>
+    <p>Tria una resposta per pregunta. En acabar, prem «Corregir test i calcular nota». Cada encert val 0,5 punts. Les preguntes en blanc no sumen ni resten.</p>
+    <div id="progress">Preguntes contestades: 0 de 20</div>
+  </div>
+
+  <form id="quiz">
+    <div id="questions"></div>
+    <div class="actions">
+      <button class="primary" type="submit">Corregir test i calcular nota</button>
+      <button class="secondary" type="button" id="reset">Tornar a començar</button>
+    </div>
+  </form>
+
+  <section id="result" aria-live="polite">
+    <h2>Resultat del test</h2>
+    <div id="score"></div>
+    <div id="summary"></div>
+  </section>
+</main>
+
+<footer>Test educatiu de seguretat informàtica · Web estàtica</footer>
+
+<script>
+const questions = [
+  {
+    q: "Per què cal protegir la informació en un sistema informàtic?",
+    o: [
+      "Només per complir amb la normativa legal vigent",
+      "Perquè és un actiu valuós que pot patir pèrdues, robatori o modificació no autoritzada",
+      "Únicament per evitar programari no autoritzat",
+      "Perquè els sistemes sempre són insegurs per naturalesa"
+    ], a: 1
+  },
+  {
+    q: "Quins són els tres pilars clàssics de la seguretat de la informació?",
+    o: [
+      "Autenticació, autorització i auditoria",
+      "Confidencialitat, integritat i disponibilitat",
+      "Prevenció, detecció i correcció",
+      "Física, lògica i activa"
+    ], a: 1
+  },
+  {
+    q: "La confidencialitat garanteix que:",
+    o: [
+      "La informació estiga sempre disponible",
+      "La informació no siga modificada sense permís",
+      "Només les persones autoritzades puguen accedir a la informació",
+      "Es puga demostrar qui ha enviat un missatge"
+    ], a: 2
+  },
+  {
+    q: "La integritat de la informació es refereix a:",
+    o: [
+      "Que la informació siga exacta, completa i no s'haja alterat sense autorització",
+      "Que la informació estiga xifrada sempre",
+      "Que estiga disponible les 24 hores",
+      "Que només siga accessible des de la xarxa interna"
+    ], a: 0
+  },
+  {
+    q: "La disponibilitat implica que:",
+    o: [
+      "La informació només estiga accessible en horari laboral",
+      "Els usuaris autoritzats puguen accedir a la informació i als recursos quan els calga",
+      "La informació estiga duplicada en tres servidors",
+      "La informació no es puga esborrar mai"
+    ], a: 1
+  },
+  {
+    q: "Què significa el principi de no repudiació?",
+    o: [
+      "L'usuari no pot negar haver realitzat una acció o enviat un missatge",
+      "L'usuari pot rebutjar les condicions d'ús",
+      "El sistema no pot rebutjar peticions d'accés",
+      "Cap usuari pot ser expulsat del sistema"
+    ], a: 0
+  },
+  {
+    q: "Quina diferència hi ha entre seguretat física i seguretat lògica?",
+    o: [
+      "La física protegeix el maquinari i les instal·lacions; la lògica protegeix les dades i el programari",
+      "La física protegeix les dades i la lògica els equips",
+      "Són sinònims",
+      "La física només s'aplica als servidors"
+    ], a: 0
+  },
+  {
+    q: "La seguretat passiva es caracteritza per:",
+    o: [
+      "Prevenir les amenaces abans que es produïsquen",
+      "Detectar i corregir els danys després d'un incident",
+      "Xifrar totes les comunicacions",
+      "Analitzar periòdicament les vulnerabilitats"
+    ], a: 1
+  },
+  {
+    q: "La seguretat activa es caracteritza per:",
+    o: [
+      "Intentar evitar o previndre les amenaces abans que es materialitzen",
+      "Actuar només després d'un atac",
+      "Ser sempre més econòmica",
+      "No requerir manteniment"
+    ], a: 0
+  },
+  {
+    q: "Quins són els tres factors d'autenticació clàssics?",
+    o: [
+      "Usuari, contrasenya i correu electrònic",
+      "Una cosa que saps, una cosa que tens i una cosa que eres",
+      "Xifrat, signatura i hash",
+      "Confidencialitat, integritat i disponibilitat"
+    ], a: 1
+  },
+  {
+    q: "Quin és un exemple de factor d'autenticació biomètric?",
+    o: [
+      "Una contrasenya",
+      "Un token USB",
+      "L'empremta dactilar o el reconeixement facial",
+      "Un certificat digital guardat al disc"
+    ], a: 2
+  },
+  {
+    q: "Què significa el model AAA en seguretat informàtica?",
+    o: [
+      "Accés, Alerta i Auditoria",
+      "Autenticació, Autorització i Accounting (registre o comptabilització)",
+      "Antivirus, Antispam i Antimalware",
+      "Anàlisi, Avaluació i Acció"
+    ], a: 1
+  },
+  {
+    q: "La comunicació extrem a extrem (end-to-end) implica que:",
+    o: [
+      "Les dades es xifren entre els extrems i només aquests les poden desxifrar",
+      "Les dades viatgen sense xifrar pels intermediaris",
+      "El servidor central sempre desxifra els missatges",
+      "Només s'aplica a xarxes locals"
+    ], a: 0
+  },
+  {
+    q: "Què és una vulnerabilitat?",
+    o: [
+      "Un programa maliciós",
+      "Una debilitat o error que pot ser aprofitat per una amenaça",
+      "Un atac que ja s'ha produït",
+      "Una eina de protecció"
+    ], a: 1
+  },
+  {
+    q: "Què és un exploit?",
+    o: [
+      "Una contrasenya molt segura",
+      "Una tècnica, codi o eina que aprofita una vulnerabilitat",
+      "Un mètode de xifrat",
+      "Un protocol de comunicació segura"
+    ], a: 1
+  },
+  {
+    q: "Quin dels elements següents és un tipus de malware?",
+    o: [
+      "Tallafocs (firewall)",
+      "Xifrat AES",
+      "Troià (trojan)",
+      "VPN"
+    ], a: 2
+  },
+  {
+    q: "En què consisteix principalment un atac de phishing?",
+    o: [
+      "Enviar moltes peticions per saturar un servidor",
+      "Enganyar l'usuari perquè revele informació confidencial suplantant una entitat de confiança",
+      "Xifrar les dades i demanar un rescat",
+      "Escanejar els ports d'una xarxa"
+    ], a: 1
+  },
+  {
+    q: "Quin és l'objectiu principal del RGPD?",
+    o: [
+      "Regular el programari lliure",
+      "Protegir les persones físiques pel que fa al tractament de les seues dades personals",
+      "Establir les normes dels sistemes operatius",
+      "Regular només el comerç electrònic"
+    ], a: 1
+  },
+  {
+    q: "En l'Administració electrònica, què cal garantir principalment?",
+    o: [
+      "Que tots els tràmits siguen presencials",
+      "La identitat dels ciutadans i la integritat i confidencialitat de les dades",
+      "L'ús de contrasenyes simples",
+      "Que no es guarde cap registre"
+    ], a: 1
+  },
+  {
+    q: "Quina afirmació sobre els tipus d'atacs és correcta?",
+    o: [
+      "Els atacs passius només modifiquen informació",
+      "Els atacs actius poden modificar, interrompre o destruir recursos; els passius intercepten informació sense alterar-la",
+      "Tots els atacs són actius",
+      "Els atacs passius sempre deixen traces evidents"
+    ], a: 1
+  }
+];
+
+const letters = ["a", "b", "c", "d"];
+const container = document.getElementById("questions");
+const form = document.getElementById("quiz");
+const result = document.getElementById("result");
+
+function renderQuestions() {
+  container.innerHTML = "";
+  questions.forEach((item, i) => {
+    const card = document.createElement("section");
+    card.className = "question";
+    card.id = `question-${i}`;
+
+    const heading = document.createElement("h2");
+    heading.textContent = `${i + 1}. ${item.q}`;
+    card.appendChild(heading);
+
+    const options = document.createElement("div");
+    options.className = "options";
+
+    item.o.forEach((option, j) => {
+      const label = document.createElement("label");
+      label.className = "option";
+      label.dataset.option = j;
+
+      const input = document.createElement("input");
+      input.type = "radio";
+      input.name = `q${i}`;
+      input.value = j;
+      input.setAttribute("aria-label", `${letters[j]}) ${option}`);
+
+      const text = document.createElement("span");
+      text.textContent = `${letters[j]}) ${option}`;
+
+      label.append(input, text);
+      options.appendChild(label);
+    });
+
+    card.appendChild(options);
+    const feedback = document.createElement("p");
+    feedback.className = "feedback";
+    feedback.hidden = true;
+    card.appendChild(feedback);
+    container.appendChild(card);
+  });
+}
+
+function updateProgress() {
+  const answered = questions.filter((_, i) =>
+    form.querySelector(`input[name="q${i}"]:checked`)
+  ).length;
+  document.getElementById("progress").textContent =
+    `Preguntes contestades: ${answered} de ${questions.length}`;
+}
+
+form.addEventListener("change", updateProgress);
+
+form.addEventListener("submit", event => {
+  event.preventDefault();
+
+  let correct = 0;
+  let incorrect = 0;
+  let blank = 0;
+
+  questions.forEach((item, i) => {
+    const card = document.getElementById(`question-${i}`);
+    const selected = form.querySelector(`input[name="q${i}"]:checked`);
+    const feedback = card.querySelector(".feedback");
+    const labels = card.querySelectorAll(".option");
+
+    labels.forEach((label, j) => {
+      label.classList.remove("correct", "wrong");
+      label.querySelector("input").disabled = true;
+      if (j === item.a) label.classList.add("correct");
+      if (selected && Number(selected.value) === j && j !== item.a) {
+        label.classList.add("wrong");
+      }
+    });
+
+    feedback.hidden = false;
+
+    if (!selected) {
+      blank++;
+      feedback.className = "feedback bad";
+      feedback.textContent =
+        `Sense resposta. La correcta és ${letters[item.a]}) ${item.o[item.a]}.`;
+    } else if (Number(selected.value) === item.a) {
+      correct++;
+      feedback.className = "feedback good";
+      feedback.textContent = "✓ Correcta! +0,5 punts.";
+    } else {
+      incorrect++;
+      feedback.className = "feedback bad";
+      feedback.textContent =
+        `✗ Incorrecta. La resposta correcta és ${letters[item.a]}) ${item.o[item.a]}.`;
+    }
+  });
+
+  const grade = correct * 0.5;
+  document.getElementById("score").textContent =
+    `${grade.toLocaleString("ca-ES", {minimumFractionDigits: 1, maximumFractionDigits: 1})} / 10`;
+  document.getElementById("summary").textContent =
+    `Encerts: ${correct} de 20 · Errors: ${incorrect} · En blanc: ${blank}`;
+
+  result.style.display = "block";
+  result.scrollIntoView({ behavior: "smooth", block: "start" });
+  form.querySelector('button[type="submit"]').disabled = true;
+});
+
+document.getElementById("reset").addEventListener("click", () => {
+  form.reset();
+  renderQuestions();
+  updateProgress();
+  result.style.display = "none";
+  form.querySelector('button[type="submit"]').disabled = false;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
+
+renderQuestions();
+</script>
+</body>
+</html>
